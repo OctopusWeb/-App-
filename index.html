@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link rel="stylesheet" href="css/style.css" />
+	</head>
+	<body>
+		<div id="wrap">
+			<div id="topBk" class="bkImg"><img src="img/topBk.png"/></div>
+			<div id="bottomBk" class="bkImg"><img src="img/bottomBk.png"/></div>
+			<div id="rightBk" class="bkImg"><img src="img/rightBk.png" class="rightBk"/></div>
+			<div id="leftBk" class="bkImg"></div>
+			<div id="leftTitle">
+				<div class="title">
+					<h1>Coming Soon</h1><h2>即将播映</h2>
+				</div>
+				<h3>钢铁侠3</h3>
+				<div class="bar"></div>
+			</div>
+			<div id="menu">
+				<div class="search"><img src="img/menuBtn1.png"/></div>
+				<div class="person"><img src="img/menuBtn2.png"/></div>
+				<div class="menu"><img src="img/menuBtn3.png"/></div>
+			</div>
+			<div id="carousel">
+		        <div id="container" tcc-rotation="0">
+		            <item><img src="img/rightImg.jpg"></item>
+		            <item><img src="img/rightImg.jpg"></item>
+		            <item><img src="img/rightImg.jpg"></item>
+		            <item><img src="img/rightImg.jpg"></item>
+		            <item><img src="img/rightImg.jpg"></item>
+		            <item><img src="img/rightImg.jpg"></item>
+		        </div>
+		    </div>
+		</div>
+		
+	</body>
+	<script type="text/javascript" src="js/jquery-2.1.1.min.js" ></script>
+	<script type="text/javascript" src="js/three.min.js" ></script>
+	<script type="text/javascript" src="js/OBJLoader.js" ></script>
+	<script type="text/javascript" src="js/main.js" ></script>
+	<script>
+			var container;
+			var camera, scene, renderer;
+			var mouseX = 0, mouseY = 0;
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+			init();
+			animate();
+			function init() {
+				container = document.createElement( 'div' );
+				document.getElementById("leftBk").appendChild( container );
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+                camera.fov = 135;
+                camera.updateProjectionMatrix();
+				// scene
+				scene = new THREE.Scene();
+				var ambient = new THREE.AmbientLight( 0x101030 );
+				scene.add( ambient );
+				var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
+				// texture
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+					console.log( item, loaded, total );
+				};
+				var texture = new THREE.Texture();
+				var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+				var onError = function ( xhr ) {
+				};
+				var loader = new THREE.ImageLoader( manager );
+				loader.load( 'img/banner.jpg', function ( image ) {
+					texture.image = image;
+					texture.needsUpdate = true;
+				} );
+				// model
+				var texture1 = new THREE.Texture();
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'img/DaPingDi.obj', function ( object ) {
+					object.traverse( function ( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							child.material.map = texture1;
+						}
+					} );
+					object.position.y = -1200;
+					object.position.x = 3500;
+					scene.add( object );
+				}, onProgress, onError );
+				
+				var loader = new THREE.ImageLoader( manager );
+				loader.load( 'img/an_endless_road_with_mountains_in_the_distance.jpg', function ( image ) {
+					texture1.image = image;
+					texture1.needsUpdate = true;
+				} );
+				// model
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'img/DaPing.obj', function ( object ) {
+					object.traverse( function ( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							child.material.map = texture;
+						}
+					} );
+					object.position.y = -1180;
+					object.position.x = 3500;
+					scene.add( object );
+				}, onProgress, onError );
+				
+				renderer = new THREE.WebGLRenderer({
+					alpha:true,
+					antialias:true
+				});
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+				//
+			}
+			function onWindowResize() {
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+			function onDocumentMouseMove( event ) {
+				mouseX = ( event.clientX - windowHalfX ) / 2;
+				mouseY = ( event.clientY - windowHalfY ) / 2;
+			}
+			//
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+			}
+			function render() {
+				camera.position.x = 0;
+                camera.position.y = 0;
+                camera.position.z = 0;
+                camera.up.x = 0;
+                camera.up.y = 1; //相机朝向--相机上方为y轴
+                camera.up.z = 0;
+                camera.lookAt({  //相机的中心点
+                      x : 0,
+                      y : 0,
+                      z : 0
+                  });
+				camera.lookAt( scene.position );
+				renderer.render( scene, camera );
+			}
+	</script>
+</html>
