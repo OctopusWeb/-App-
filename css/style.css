@@ -7,18 +7,31 @@ body{width: 100%;height: 100%;background: #151515;}
 #wrap #rightBk{height: 70%;right: 50px;top: 23%;z-index: 100;}
 #wrap #rightBk .rightBk{height: 100%;width: auto;}
 #wrap #bottomBk{bottom: 0;right: 0;width: 90%;}
-#wrap #leftBk{height: 100%;left: 0;}
-#wrap #leftBk img{height: 100%;width: auto;}
-#wrap #leftTitle{width: 23%;height: 50px;z-index: 1000;position: absolute;top: 50%;height: 140px;margin-top: -75px;color: #fff;}
+#wrap #leftBk{position: absolute;background: #abc;}
+#wrap #leftTitle{width: 330px;z-index: 1000;position: absolute;top: 50%;height: 180px;margin-top: -60px;color: #fff;
+transform-origin:0 0;-webkit-transform-origin:0 0;}
 #wrap #leftTitle .title{width: 100;background:rgba(0,0,0,0.7);border-radius: 5px;}
-#wrap #leftTitle h1{width: 100%;line-height: 40px;font-size: 18px;color: #fff;text-align: center;font-weight: 400;}
-#wrap #leftTitle h2{width: 100%;line-height: 40px;font-size: 40px;text-align: center;font-weight: 400;padding-bottom: 20px;}
-#wrap #leftTitle h3{width: 100%;line-height: 40px;font-size: 20px;text-align: center;font-weight: 400;background: rgba(0,0,0,0.7);border-radius: 5px;margin-top: 3px;}
+#wrap #leftTitle h1{width: 100%;line-height: 60px;font-size: 18px;color: #fff;text-align: center;font-weight: 400;}
+#wrap #leftTitle h2{width: 100%;line-height: 50px;font-size: 40px;text-align: center;font-weight: 400;padding-bottom: 20px;}
+#wrap #leftTitle h3{width: 100%;line-height: 50px;font-size: 24px;text-align: center;font-weight: 400;background: rgba(0,0,0,0.7);border-radius: 5px;margin-top: 3px;}
 #wrap #menu{position: absolute;height: 33%;top: 33%;right: 0;z-index: 1000;}
 #wrap #menu div{height: 25%;margin-top: 10%;float: left;width: 100%;overflow: hidden;}
 #wrap #menu div img{height: 100%;float: right;}
+.bar{width: 100%;background: rgba(0,0,0,0.7);border-radius: 5px;height: 20px;margin-top: 3px;}
+.bar .bar-bk{width: 10%;float: left;height: 10px;background: #535353;border-radius: 5px;margin-top: 5px;margin-left: 2%;}
+.bar .selected{width: 35%;margin-left: 2%;background: #ff5108}
+
+#iframB{z-index: 1000;width: 100%;height: 100%;overflow: auto;position: fixed;background: rgba(0,0,0,0.5);display: none;}
+#iframB iframe{width: 80%;height: 70%;margin: 10%;border: none;}
+#iframB .closed{width: 40px;height: 40px;text-align: center;line-height: 40px;font-size: 20px;background: rgba(0,0,0,0.8);border-radius: 50%;
+z-index: 100;position: absolute;top: 10%;right: 10%;margin-right: -20px;color: #fff;border: 1px #fff solid;}
+
+
 
 #showImg{position: absolute;z-index: 100;left: 50%;margin-left: -90px;display: none;}
+#showImg img{width:100%;}
+#showImg .closeI{position: absolute;right: -20px;width: 40px;height: 40px;text-align: center;line-height: 40px;font-size: 20px;
+background: rgba(0,0,0,0.8);border-radius: 50%;z-index: 100;top: -20px;}
 #carousel {
     display: block;
     height: auto;
@@ -28,6 +41,7 @@ body{width: 100%;height: 100%;background: #151515;}
     position: absolute;
     width: 400px;
     z-index: 200;
+    bottom: 65%;
 }
 
 #container {
@@ -86,3 +100,7 @@ item {
 item img {
     width: 100%;
 }
+
+#leftBk div{position: absolute;height: 1400px;width: 2000px;left: 0;top: 0;}
+#leftBk div canvas{position: absolute;top: 0;margin: 0;padding: 0;}
+

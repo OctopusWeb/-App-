@@ -1,28 +1,76 @@
 $(document).ready(function($){
+	var assets = {};
 	var num=0;
+	var navNum=0;
+	var r;
+	var offsetX=0;
+	var texture;
+	var bannerTime;
+	var autoTime;
 	$("#wrap").animate({"right":"0%"});
-	$("#carousel").swipe( {
+	$("#carousel").swipe({
 	    swipe:function(event, direction, distance, duration, fingerCount, fingerData) {
-	    
 	      if(direction == "left"){
 	      	num++
-	      	num==7?num=0:num=num;
+	      	num==6?num=0:num=num;
 	      	rotateto -= tcItemInitialRotation;
         	tcRotate(rotateto);
+        	titleChange(num,"up");
 	      }else if(direction == "right"){
 	      	num--;
-	      	num==-1?num=6:num=num;
+	      	num==-1?num=5:num=num;
 	      	rotateto += tcItemInitialRotation;
         	tcRotate(rotateto);
+        	titleChange(num,"down");
 	      }else if(!direction){
-	      	alert(num);
 	      }
+	      window.clearInterval(autoTime);
+	      autoTime = setInterval(function(){
+		    	num++;
+		    	num==6?num=0:num=num;
+		    	titleChange(num,"up");
+		        rotateto -= tcItemInitialRotation;
+		        tcRotate(rotateto);
+		    },5000);
 	    },
 	     threshold:0
-	  });
+	});
+	$("#leftBk").swipe( {
+	    swipe:function(event, direction, distance, duration, fingerCount, fingerData) {
+	      if(direction == "left"){
+	      	num++
+	      	num==6?num=0:num=num;
+	      	rotateto -= tcItemInitialRotation;
+        	tcRotate(rotateto);
+        	titleChange(num,"up");
+	      }else if(direction == "right"){
+	      	num--;
+	      	num==-1?num=5:num=num;
+	      	rotateto += tcItemInitialRotation;
+        	tcRotate(rotateto);
+        	titleChange(num,"down");
+	      }else if(!direction){
+	      	navNum=0;
+	      	$("#menu").animate({"right":"0%"})
+	      }
+	        window.clearInterval(autoTime);
+	        autoTime = setInterval(function(){
+		    	num++;
+		    	num==6?num=0:num=num;
+		    	titleChange(num,"up");
+		        rotateto -= tcItemInitialRotation;
+		        tcRotate(rotateto);
+		    },5000);
+	      
+	    },
+	     threshold:0
+	});
+	$(".closed").on("click",function(){
+		$("#iframB").animate({"top":"100%"})
+	})
     var crotation;
     var rotateto = 0;
-    var itemCount = $('item').length; // count of items in corousel
+    var itemCount = $('item').length; 
     var tcItemInitialRotation = 360/itemCount;
     var tcZDistance = 150;
     init()
@@ -32,17 +80,17 @@ $(document).ready(function($){
 //  	404 583
     	var r = screenHei/780;
     	setTimeout(function(){
-    		var r = $("#rightBk").width()/340;
+    		r = $("#rightBk").width()/340;
     		var s = $("#rightBk").height();
     		var t = $("#carousel").height()*r/2;
     		$("#carousel").css("-webkit-transform","scale(" + r + ")"); 
 			$("#carousel").css({"right":20-340*(1-r)/2+"px"});
-			$("#carousel").css({"top":20*r+"%"});
-			$("#carousel").css({"margin-top":s/4.5+"px"});
-			
+			$("#leftBk").css("-webkit-transform","scale(" + $("#wrap").height()/1400 + ")");
+			$("#leftTitle").css("-webkit-transform","scale(" + $("#wrap").height()/1400 + ")");			
     	},1);
 		
     }
+    
     
     $('item').each( function(index) {
                    
@@ -59,25 +107,93 @@ $(document).ready(function($){
             '-webkit-transform' : 'rotateY('+ tcdeg +'deg)'
         });
     }
-    setInterval(function(){
+    autoTime = setInterval(function(){
     	num++;
-    	num==7?num=0:num=num;
+    	num==6?num=0:num=num;
+    	titleChange(num,"up");
         rotateto -= tcItemInitialRotation;
         tcRotate(rotateto);
-    },5000)
+    },5000);
+    setInterval(function(){
+    	navNum++;
+    	if(navNum == 5){
+    		$("#menu").animate({"right":"-20%"})
+    	}
+    },1000)
 
 
 	var container;
 	var camera, scene, renderer;
 	var mouseX = 0, mouseY = 0;
-	var windowHalfX = window.innerWidth / 2;
-	var windowHalfY = window.innerHeight / 2;
-	init1();
-	animate();
+	var windowHalfX = 500;
+	var windowHalfY = 350;
+	$.getJSON("http://120.92.4.46:8080/from/headPageApi/headPage.do",function(json){
+		cacheImages(json,function(){
+			init1();
+			animate();
+		});
+	});
+	
+	//cache images
+	function cacheImages(json,onComplete)
+	{
+		var urls = [];
+		$.each(json.data.playBillList, function() {
+			urls.push(this.angleIcon);
+		});
+		var cachedImages = [];
+		cacheImage(0);
+		
+		function cacheImage(idx)
+		{
+			if(idx == urls.length)return allComplete();
+			var img = new Image();
+			img.crossOrigin = "anynonus";
+			img.onload = function()
+			{
+				cachedImages.push(img);
+				cacheImage(idx+1);
+			}
+			//img.src = urls[idx];
+			img.src = "img/banner.jpg";
+		}
+		
+		function allComplete()
+		{
+			assets.cachedImages = cachedImages;
+			onComplete();
+		}
+	}
+	
+	//create concat big image
+	function getConcatImage()
+	{
+		var canvas = $("<canvas>");
+		var drawArr = assets.cachedImages.concat();
+		drawArr.push(assets.cachedImages[0]);
+		drawArr.unshift(assets.cachedImages[assets.cachedImages.length-1]);
+		var len = drawArr.length;
+		canvas.get(0).width = 1024*len;
+		canvas.get(0).height = 500;
+		var ctx = canvas.get(0).getContext('2d');
+		for(var i=0;i<len;i++)
+		{
+			drawImage(drawArr[i],i,1024,500);
+		}
+		
+		function drawImage(image,idx)
+		{
+			var tx = 1024*idx;
+			ctx.drawImage(image,tx,0);
+		}
+		return canvas.get(0).toDataURL();
+	}
+	
+	
 	function init1() {
 		container = document.createElement( 'div' );
 		document.getElementById("leftBk").appendChild( container );
-		camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+		camera = new THREE.PerspectiveCamera( 45, 2000 /1400, 1, 12000 );
         camera.fov = 135;
         camera.updateProjectionMatrix();
 		// scene
@@ -88,24 +204,26 @@ $(document).ready(function($){
 		directionalLight.position.set( 0, 0, 1 );
 		scene.add( directionalLight );
 		// texture
-		var manager = new THREE.LoadingManager();
+		manager = new THREE.LoadingManager();
 		manager.onProgress = function ( item, loaded, total ) {
-			console.log( item, loaded, total );
 		};
-		var texture = new THREE.Texture();
+		texture = new THREE.Texture();
 		var onProgress = function ( xhr ) {
 			if ( xhr.lengthComputable ) {
 				var percentComplete = xhr.loaded / xhr.total * 100;
-				console.log( Math.round(percentComplete, 2) + '% downloaded' );
 			}
 		};
 		var onError = function ( xhr ) {
 		};
 		var loader = new THREE.ImageLoader( manager );
-		loader.load( 'img/banner.jpg', function ( image ) {
+		loader.load(getConcatImage(), function ( image ) {
 			texture.image = image;
 			texture.needsUpdate = true;
+			texture.offset = new THREE.Vector2(0.125,0);
+			texture.repeat.set( 0.125, 1);
+			
 		} );
+		
 		// model
 		var texture1 = new THREE.Texture();
 		var loader = new THREE.OBJLoader( manager );
@@ -143,9 +261,43 @@ $(document).ready(function($){
 			antialias:true
 		});
 		renderer.setPixelRatio( window.devicePixelRatio );
-		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.setSize( 2000, 1400 );
 		container.appendChild( renderer.domElement );
+		
 		//
+	}
+	function titleChange(data,type){
+		window.clearInterval(bannerTime);
+    	$(".bar-bk").removeClass("selected");
+    	$(".bar-bk").eq(data).addClass("selected");
+    	
+    	if(type == "up"){
+    		offsetX = 0.125*(data);
+    		bannerTime = setInterval(function(){
+				offsetX+=0.001;
+				if(offsetX >= 0.125*(data+1)){
+					window.clearInterval(bannerTime);
+				}
+				texture.offset = new THREE.Vector2(offsetX,0);
+			},5)
+    	}else if(type == "down"){
+    		offsetX = 0.125*(data+2);
+    		bannerTime = setInterval(function(){
+				offsetX-=0.001;
+				if(offsetX <= 0.125*(data+1)){
+					window.clearInterval(bannerTime);
+				}
+				texture.offset = new THREE.Vector2(offsetX,0);
+			},5)
+    	}
+		
+   }
+	function canvasPic(){
+		var c=document.getElementById("myCanvas");
+		var cxt=c.getContext("2d");
+		var img=new Image()
+		img.src="img/banner.jpg"
+		cxt.drawImage(img,0,0);
 	}
 	function onWindowResize() {
 		windowHalfX = window.innerWidth / 2;
@@ -159,23 +311,22 @@ $(document).ready(function($){
 		mouseY = ( event.clientY - windowHalfY ) / 2;
 	}
 	//
+	/*
 	function animate() {
 		requestAnimationFrame( animate );
 		render();
 	}
 	function render() {
-		camera.position.x = 0;
-        camera.position.y = 0;
-        camera.position.z = 0;
-        camera.up.x = 0;
-        camera.up.y = 1; //相机朝向--相机上方为y轴
-        camera.up.z = 0;
-        camera.lookAt({  //相机的中心点
-              x : 0,
-              y : 0,
-              z : 0
-          });
-		camera.lookAt( scene.position );
+		camera.lookAt(new THREE.Vector3());
 		renderer.render( scene, camera );
+	}
+	*/
+	function animate()
+	{
+		requestAnimationFrame(function(){
+			camera.lookAt(new THREE.Vector3());
+			renderer.render( scene, camera );
+			requestAnimationFrame(arguments.callee);
+		});
 	}
 });
