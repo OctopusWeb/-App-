@@ -1,12 +1,16 @@
 $(document).ready(function($){
 	var assets = {};
 	var num=0;
+	var playNum =0;
 	var navNum=0;
 	var r;
 	var offsetX=0;
 	var texture;
 	var bannerTime;
 	var autoTime;
+	var videoArr=[];
+	var playArr = [];
+	var picAll = 0;
 	$("#wrap").animate({"right":"0%"});
 	$("#carousel").swipe({
 	    swipe:function(event, direction, distance, duration, fingerCount, fingerData) {
@@ -15,58 +19,56 @@ $(document).ready(function($){
 	      	num==6?num=0:num=num;
 	      	rotateto -= tcItemInitialRotation;
         	tcRotate(rotateto);
-        	titleChange(num,"up");
 	      }else if(direction == "right"){
 	      	num--;
 	      	num==-1?num=5:num=num;
 	      	rotateto += tcItemInitialRotation;
         	tcRotate(rotateto);
-        	titleChange(num,"down");
 	      }else if(!direction){
+	      	console.log(videoArr[num]);
+	      	if (typeof videoHallClick== "undefined") {
+	      		console.log("并没有找到videoHallClick方法")
+	      	}else{
+	      		videoHallClick(videoArr[num].auditoriumId,videoArr[num].loadType,videoArr[num].loadUrl);
+	      	}
 	      }
 	      window.clearInterval(autoTime);
 	      autoTime = setInterval(function(){
 		    	num++;
 		    	num==6?num=0:num=num;
-		    	titleChange(num,"up");
 		        rotateto -= tcItemInitialRotation;
 		        tcRotate(rotateto);
 		    },5000);
 	    },
 	     threshold:0
 	});
-	$("#leftBk").swipe( {
+	$("#leftEvent").swipe({
 	    swipe:function(event, direction, distance, duration, fingerCount, fingerData) {
 	      if(direction == "left"){
-	      	num++
-	      	num==6?num=0:num=num;
-	      	rotateto -= tcItemInitialRotation;
-        	tcRotate(rotateto);
-        	titleChange(num,"up");
+	      	playNum++
+	      	playNum==picAll?playNum=0:playNum=playNum;
+        	titleChange(playNum,"up");
 	      }else if(direction == "right"){
-	      	num--;
-	      	num==-1?num=5:num=num;
-	      	rotateto += tcItemInitialRotation;
-        	tcRotate(rotateto);
-        	titleChange(num,"down");
+	      	playNum--;
+	      	playNum==-1?playNum=picAll-1:playNum=playNum;
+        	titleChange(playNum,"down");
 	      }else if(!direction){
-	      	navNum=0;
-	      	$("#menu").animate({"right":"0%"})
+	      	if (typeof playBillClick== "undefined") {
+	      		console.log("并没有找到playBillClick方法")
+	      	}else{
+	      			playBillClick(playArr[playNum].auditoriumId,playArr[playNum].playArr,videoArr[playNum].loadUrl);
+	      	}
 	      }
-	        window.clearInterval(autoTime);
-	        autoTime = setInterval(function(){
-		    	num++;
-		    	num==6?num=0:num=num;
-		    	titleChange(num,"up");
-		        rotateto -= tcItemInitialRotation;
-		        tcRotate(rotateto);
-		    },5000);
-	      
 	    },
 	     threshold:0
 	});
 	$(".closed").on("click",function(){
 		$("#iframB").animate({"top":"100%"})
+	})
+	$("body").on("click",function(e){
+		e.stopPropagation()
+		navNum=0;
+	    $("#menu").animate({"right":"0%"})
 	})
     var crotation;
     var rotateto = 0;
@@ -77,7 +79,6 @@ $(document).ready(function($){
     function init(){
     	var screenWid = window.screen.width;
     	var screenHei = window.screen.height;
-//  	404 583
     	var r = screenHei/780;
     	setTimeout(function(){
     		r = $("#rightBk").width()/340;
@@ -93,7 +94,6 @@ $(document).ready(function($){
     
     
     $('item').each( function(index) {
-                   
         $(this).css({
             'transform' : 'rotateY('+( tcItemInitialRotation * index )+'deg) translateZ('+tcZDistance+'px)'
         }).attr('tc-rotation', ( tcItemInitialRotation * index ) );
@@ -110,7 +110,6 @@ $(document).ready(function($){
     autoTime = setInterval(function(){
     	num++;
     	num==6?num=0:num=num;
-    	titleChange(num,"up");
         rotateto -= tcItemInitialRotation;
         tcRotate(rotateto);
     },5000);
@@ -128,18 +127,40 @@ $(document).ready(function($){
 	var windowHalfX = 500;
 	var windowHalfY = 350;
 	$.getJSON("http://120.92.4.46:8080/from/headPageApi/headPage.do",function(json){
+		videoImage(json,function(){
+			$("#leftTitle h3").html(playArr[0].title);
+		})
 		cacheImages(json,function(){
 			init1();
 			animate();
 		});
 	});
 	
+	function videoImage(json,onComplete){
+		for (var i=0;i<json.data.videoHallList.length;i++) {
+			$("#container img").eq(i).attr({"src":json.data.videoHallList[i].pic});
+			videoArr.push(json.data.videoHallList[i]);
+		}
+		for (var i =0;i<json.data.playBillList.length;i++) {
+			playArr.push(json.data.playBillList[i]);
+		}
+		onComplete()
+	}
+	
 	//cache images
 	function cacheImages(json,onComplete)
 	{
+		picAll = json.data.playBillList.length;
+		var index="";
+		for (var i =0; i<picAll;i++) {
+			index+='<div class="bar-bk"></div>';
+		}
+		$(".bar").html(index);
+		$(".bar .bar-bk").eq(0).addClass("selected");
+		$(".bar .bar-bk").css({"width":50/(picAll-1)-2+"%"});
 		var urls = [];
 		$.each(json.data.playBillList, function() {
-			urls.push(this.angleIcon);
+			urls.push(this.pic);
 		});
 		var cachedImages = [];
 		cacheImage(0);
@@ -155,7 +176,7 @@ $(document).ready(function($){
 				cacheImage(idx+1);
 			}
 			//img.src = urls[idx];
-			img.src = "img/banner.jpg";
+			img.src = "https://yweb0.cnliveimg.com/img/CMCC_MOVIE/622079536_336_220.jpg";
 		}
 		
 		function allComplete()
@@ -184,7 +205,7 @@ $(document).ready(function($){
 		function drawImage(image,idx)
 		{
 			var tx = 1024*idx;
-			ctx.drawImage(image,tx,0);
+			ctx.drawImage(image,tx,0,1024,500);
 		}
 		return canvas.get(0).toDataURL();
 	}
@@ -219,8 +240,8 @@ $(document).ready(function($){
 		loader.load(getConcatImage(), function ( image ) {
 			texture.image = image;
 			texture.needsUpdate = true;
-			texture.offset = new THREE.Vector2(0.125,0);
-			texture.repeat.set( 0.125, 1);
+			texture.offset = new THREE.Vector2(1/(picAll+2),0);
+			texture.repeat.set( 1/(picAll+2), 1);
 			
 		} );
 		
@@ -237,13 +258,15 @@ $(document).ready(function($){
 			object.position.x = 3700;
 			scene.add( object );
 		}, onProgress, onError );
+
+		
 		
 		var loader = new THREE.ImageLoader( manager );
 		loader.load( 'img/wallBk.jpg', function ( image ) {
 			texture1.image = image;
 			texture1.needsUpdate = true;
 		} );
-		// model
+		//model
 		var loader = new THREE.OBJLoader( manager );
 		loader.load( 'img/DaPing.obj', function ( object ) {
 			object.traverse( function ( child ) {
@@ -255,6 +278,24 @@ $(document).ready(function($){
 			object.position.x = 3700;
 			scene.add( object );
 		}, onProgress, onError );
+		
+//		var loader = new THREE.FBXLoader( manager );
+//		loader.load( 'img/BeiMian.FBX', function( object ) {
+//			object.traverse( function( child ) {
+//				if ( child instanceof THREE.Mesh ) {
+//					// pass
+//				}
+//				if ( child instanceof THREE.SkinnedMesh ) {
+//					if ( child.geometry.animations !== undefined || child.geometry.morphAnimations !== undefined ) {
+//						child.mixer = new THREE.AnimationMixer( child );
+//						mixers.push( child.mixer );
+//						var action = child.mixer.clipAction( child.geometry.animations[ 0 ] );
+//						action.play();
+//					}
+//				}
+//			} );
+//			scene.add( object );
+//		}, onProgress, onError );
 		
 		renderer = new THREE.WebGLRenderer({
 			alpha:true,
@@ -270,21 +311,22 @@ $(document).ready(function($){
 		window.clearInterval(bannerTime);
     	$(".bar-bk").removeClass("selected");
     	$(".bar-bk").eq(data).addClass("selected");
+  		$("#leftTitle h3").html(playArr[data].title);
     	
     	if(type == "up"){
-    		offsetX = 0.125*(data);
+    		offsetX = 1/(picAll+2)*(data);
     		bannerTime = setInterval(function(){
 				offsetX+=0.001;
-				if(offsetX >= 0.125*(data+1)){
+				if(offsetX >= 1/(picAll+2)*(data+1)){
 					window.clearInterval(bannerTime);
 				}
 				texture.offset = new THREE.Vector2(offsetX,0);
 			},5)
     	}else if(type == "down"){
-    		offsetX = 0.125*(data+2);
+    		offsetX = 1/(picAll+2)*(data+2);
     		bannerTime = setInterval(function(){
 				offsetX-=0.001;
-				if(offsetX <= 0.125*(data+1)){
+				if(offsetX <= 1/(picAll+2)*(data+1)){
 					window.clearInterval(bannerTime);
 				}
 				texture.offset = new THREE.Vector2(offsetX,0);

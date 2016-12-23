@@ -18,14 +18,14 @@ transform-origin:0 0;-webkit-transform-origin:0 0;}
 #wrap #menu div{height: 25%;margin-top: 10%;float: left;width: 100%;overflow: hidden;}
 #wrap #menu div img{height: 100%;float: right;}
 .bar{width: 100%;background: rgba(0,0,0,0.7);border-radius: 5px;height: 20px;margin-top: 3px;}
-.bar .bar-bk{width: 10%;float: left;height: 10px;background: #535353;border-radius: 5px;margin-top: 5px;margin-left: 2%;}
-.bar .selected{width: 35%;margin-left: 2%;background: #ff5108}
+.bar .bar-bk{width: 23%;float: left;height: 10px;background: #535353;border-radius: 5px;margin-top: 5px;margin-left: 2%;}
+.bar .selected{width: 48% !important;margin-left: 2%;background: #ff5108}
 
 #iframB{z-index: 1000;width: 100%;height: 100%;overflow: auto;position: fixed;background: rgba(0,0,0,0.5);display: none;}
 #iframB iframe{width: 80%;height: 70%;margin: 10%;border: none;}
 #iframB .closed{width: 40px;height: 40px;text-align: center;line-height: 40px;font-size: 20px;background: rgba(0,0,0,0.8);border-radius: 50%;
 z-index: 100;position: absolute;top: 10%;right: 10%;margin-right: -20px;color: #fff;border: 1px #fff solid;}
-
+#leftEvent{position: absolute;height: 80%;width: 45%;background: none;top: 10%;left: 15%;}
 
 
 #showImg{position: absolute;z-index: 100;left: 50%;margin-left: -90px;display: none;}
