@@ -70,6 +70,30 @@ $(document).ready(function($){
 		navNum=0;
 	    $("#menu").animate({"right":"0%"})
 	})
+	$(".search").on("click",function(){
+		if (typeof searchClick== "undefined") {
+			console.log("并没有找到searchClick方法")
+		}else{
+			searchClick();
+		}
+		
+	})
+	$(".person").on("click",function(){
+		if (typeof userCentetClick== "undefined") {
+			console.log("并没有找到userCentetClick方法")
+		}else{
+			userCentetClick();
+		}
+		
+	})
+	$(".menu").on("click",function(){
+		if (typeof mobileMovieClick== "undefined") {
+			console.log("并没有找到mobileMovieClick方法")
+		}else{
+			mobileMovieClick();
+		}
+		
+	})
     var crotation;
     var rotateto = 0;
     var itemCount = $('item').length; 
@@ -175,8 +199,8 @@ $(document).ready(function($){
 				cachedImages.push(img);
 				cacheImage(idx+1);
 			}
-			//img.src = urls[idx];
-			img.src = "https://yweb0.cnliveimg.com/img/CMCC_MOVIE/622079536_336_220.jpg";
+			img.src = urls[idx];
+			//img.src = "https://yweb0.cnliveimg.com/img/CMCC_MOVIE/622079536_336_220.jpg";
 		}
 		
 		function allComplete()
@@ -214,7 +238,7 @@ $(document).ready(function($){
 	function init1() {
 		container = document.createElement( 'div' );
 		document.getElementById("leftBk").appendChild( container );
-		camera = new THREE.PerspectiveCamera( 45, 2000 /1400, 1, 12000 );
+		camera = new THREE.PerspectiveCamera( 45, 1800 /1700, 1, 12000 );
         camera.fov = 135;
         camera.updateProjectionMatrix();
 		// scene
@@ -255,7 +279,7 @@ $(document).ready(function($){
 				}
 			} );
 			object.position.y = -1200;
-			object.position.x = 3700;
+			object.position.x = 4000;
 			scene.add( object );
 		}, onProgress, onError );
 
@@ -268,14 +292,14 @@ $(document).ready(function($){
 		} );
 		//model
 		var loader = new THREE.OBJLoader( manager );
-		loader.load( 'img/DaPing.obj', function ( object ) {
+		loader.load( 'img/Daping.obj', function ( object ) {
 			object.traverse( function ( child ) {
 				if ( child instanceof THREE.Mesh ) {
 					child.material.map = texture;
 				}
 			} );
 			object.position.y = -1180;
-			object.position.x = 3700;
+			object.position.x = 4000;
 			scene.add( object );
 		}, onProgress, onError );
 		

@@ -203,6 +203,7 @@
 						tmpMat = new THREE.MeshLambertMaterial();
 						break;
 					default:
+						console.log(matNode.type)
 						console.warn( "No implementation given for material type " + matNode.type + " in FBXLoader.js.  Defaulting to basic material" );
 						tmpMat = new THREE.MeshBasicMaterial( { color: 0x3300ff } );
 						break;
@@ -1948,8 +1949,8 @@
 			i += currentStride;
 
 		}
-
 		var newMaterialIndices = [ materialIndices[ 0 ] ];
+		
 
 		if ( materialIndices.length > 1 ) {
 
