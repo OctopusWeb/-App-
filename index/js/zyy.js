@@ -5,13 +5,24 @@ $(document).ready(function ($)
     var playNum = 0;
     var navNum = 0;
     var r;
-    var offsetX = 0;
-    var texture;
     var bannerTime;
     var autoTime;
     var videoArr = [];
     var playArr = [];
     var picAll = 0;
+    var itemCount = $('item').length;
+    var tcItemInitialRotation = 360 / itemCount;
+    
+    
+    //=========================
+    var screenObj;//大屏对象
+    var manager;
+    var updateOffsetFlag=false;//更新纹理偏移量的标志位
+    var animationCount=0;//纹理偏移量
+    var newScreenTex;//新的纹理对象
+    var firstPicPath;
+    //==================
+    
     $("#wrap").animate({"right": "0%"});
     $("#carousel").swipe({
         swipe: function (event, direction, distance, duration, fingerCount, fingerData) {
@@ -97,11 +108,11 @@ $(document).ready(function ($)
     })
     var crotation;
     var rotateto = 0;
-    var itemCount = $('item').length;
-    var tcItemInitialRotation = 360 / itemCount;
+    
     var tcZDistance = 150;
     init()
-    function init() {
+    function init() 
+    {
         var screenWid = window.screen.width;
         var screenHei = window.screen.height;
         var r = screenHei / 780;
@@ -147,17 +158,22 @@ $(document).ready(function ($)
     }, 1000)
 
 
+
     var container;
     var camera, scene, renderer;
     var mouseX = 0, mouseY = 0;
     var windowHalfX = 500;
     var windowHalfY = 350;
+    
+    /**
+     * parse json
+     */
     $.getJSON("http://120.92.4.46:8080/from/headPageApi/headPage.do", function (json) {
         videoImage(json, function () {
             $("#leftTitle h3").html(playArr[0].title);
         })
         cacheImages(json, function () {
-            init1();
+            initScene();
             animate();
         });
     });
@@ -176,7 +192,6 @@ $(document).ready(function ($)
     //cache images
     function cacheImages(json, onComplete) {
         picAll = json.data.playBillList.length;
-        picAll=6;
         var index = "";
         for (var i = 0; i < picAll; i++) {
             index += '<div class="bar-bk"></div>';
@@ -184,10 +199,12 @@ $(document).ready(function ($)
         $(".bar").html(index);
         $(".bar .bar-bk").eq(0).addClass("selected");
         $(".bar .bar-bk").css({"width": 50 / (picAll - 1) - 2 + "%"});
+        
         var urls = [];
         $.each(json.data.playBillList, function () {
             urls.push(this.pic);
         });
+        firstPicPath=json.data.playBillList[0].pic;
         var cachedImages = [];
         cacheImage(0);
 
@@ -209,49 +226,35 @@ $(document).ready(function ($)
         }
     }
 
-    //create concat big image
-    function getConcatImage() {
-        var canvas = $("<canvas>");
-        var drawArr = assets.cachedImages.concat();
-        drawArr.length=6;
-        drawArr.push(assets.cachedImages[0]);
-        drawArr.unshift(assets.cachedImages[assets.cachedImages.length - 1]);
-        var len = drawArr.length;
-//      len=6;
-        canvas.get(0).width = 1024 * len;
-        canvas.get(0).height = 512;
-        var ctx = canvas.get(0).getContext('2d');
-        for (var i = 0; i < len; i++) {
-            drawImage(drawArr[i], i, 1024, 512);
-        }
 
-        function drawImage(image, idx) {
-            var tx = 1024 * idx;
-            ctx.drawImage(image, tx, 0, 1024, 512);
-        }
-
-        return canvas.get(0).toDataURL();
-    }
-
-
-    function init1() {
+    function initScene() {
         container = document.createElement('div');
         document.getElementById("leftBk").appendChild(container);
+        
+        /**
+         * camera set 
+         */
         camera = new THREE.PerspectiveCamera(45, 1800 / 1700, 1, 12000);
         camera.fov = 135;
         camera.updateProjectionMatrix();
-        // scene
+        
+        /**
+         * scene
+         */
         scene = new THREE.Scene();
         var ambient = new THREE.AmbientLight(0x101030);
         scene.add(ambient);
         var directionalLight = new THREE.DirectionalLight(0xffeedd);
         directionalLight.position.set(0, 0, 1);
         scene.add(directionalLight);
-        // texture
+        
+        
+		/**
+		 * texture and model
+		 */
         manager = new THREE.LoadingManager();
         manager.onProgress = function (item, loaded, total) {
-        };
-        texture = new THREE.Texture();
+        };				
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
@@ -259,41 +262,51 @@ $(document).ready(function ($)
         };
         var onError = function (xhr) {
         };
+
+        /**
+         * screen bg model
+         */
+        //load texture 
+        var textureBG = new THREE.Texture();
         var loader = new THREE.ImageLoader(manager);
-        loader.load(getConcatImage(), function (image) {
-            texture.image = image;
-            texture.needsUpdate = true;
-            texture.offset = new THREE.Vector2(1 / (picAll + 2), 0);
-            texture.repeat.set(1 / (picAll + 2), 1);
-
+        loader.load('img/wallBk.jpg', function (image) {
+            textureBG.image = image;
+            textureBG.needsUpdate = true;
         });
-
-        // model
-        var texture1 = new THREE.Texture();
+        //load obj
         var loader = new THREE.OBJLoader(manager);
         loader.load('img/DaPingDi.obj', function (object) {
             object.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
-                    child.material.map = texture1;
+                    child.material.map = textureBG;
                 }
             });
             object.position.y = -1200;
             object.position.x = 4000;
             scene.add(object);
         }, onProgress, onError);
+ 
+ 
+        /**
+         * screen model
+         */
+        //load texture
+		var screenTex = new THREE.Texture();
+		var loader = new THREE.ImageLoader( manager );
+		loader.load( firstPicPath, function ( image ) {
 
-
-        var loader = new THREE.ImageLoader(manager);
-        loader.load('img/wallBk.jpg', function (image) {
-            texture1.image = image;
-            texture1.needsUpdate = true;
-        });
-        //model
+			screenTex.image = image;
+			screenTex.needsUpdate = true;
+			
+		} );
+        //load obj
         var loader = new THREE.OBJLoader(manager);
         loader.load('img/Daping.obj', function (object) {
+        	
+        	screenObj=object;
             object.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
-                    child.material.map = texture;
+                    child.material.map = screenTex;
                 }
             });
             object.position.y = -1180;
@@ -301,24 +314,10 @@ $(document).ready(function ($)
             scene.add(object);
         }, onProgress, onError);
 
-//		var loader = new THREE.FBXLoader( manager );
-//		loader.load( 'img/BeiMian.FBX', function( object ) {
-//			object.traverse( function( child ) {
-//				if ( child instanceof THREE.Mesh ) {
-//					// pass
-//				}
-//				if ( child instanceof THREE.SkinnedMesh ) {
-//					if ( child.geometry.animations !== undefined || child.geometry.morphAnimations !== undefined ) {
-//						child.mixer = new THREE.AnimationMixer( child );
-//						mixers.push( child.mixer );
-//						var action = child.mixer.clipAction( child.geometry.animations[ 0 ] );
-//						action.play();
-//					}
-//				}
-//			} );
-//			scene.add( object );
-//		}, onProgress, onError );
 
+		/**
+		 * render
+		 */
         renderer = new THREE.WebGLRenderer({
             alpha: true,
             antialias: true
@@ -326,56 +325,32 @@ $(document).ready(function ($)
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(2000, 1400);
         container.appendChild(renderer.domElement);
-
-        //
     }
-
+	var icon=false;//left
     function titleChange(data, type) {
         window.clearInterval(bannerTime);
         $(".bar-bk").removeClass("selected");
         $(".bar-bk").eq(data).addClass("selected");
         $("#leftTitle h3").html(playArr[data].title);
 
-		console.log("data"+data);
         if (type == "up") {
-            offsetX = 1 / (picAll + 2) * (data);
-            bannerTime = setInterval(function () {
-                offsetX += 0.005;
-                if (offsetX >= 1 / (picAll + 2) * (data + 1)) {
-                    window.clearInterval(bannerTime);
-                }
-                texture.offset = new THREE.Vector2(offsetX, 0);
-            }, 5)
-        } else if (type == "down") {
-            offsetX = 1 / (picAll + 2) * (data + 2);
-            bannerTime = setInterval(function () {
-                offsetX -= 0.005;
-                if (offsetX <= 1 / (picAll + 2) * (data + 1)) {
-                    window.clearInterval(bannerTime);
-                }
-                texture.offset = new THREE.Vector2(offsetX, 0);
-            }, 5)
+        	
+			var pre = (data - 1 + picAll) % picAll;
+			var aim = data;
+			updateTexture(pre,aim);
+			icon=false;
+//			updateOffsetFlag=true;
+			
+       	} else if (type == "down") {
+       		
+       		var pre = (data + 1) % picAll;
+			var aim = data;
+			updateTexture(aim,pre);
+			
+			icon=true;
         }
 
-    }
-
-// 	var state = "";
-//
-//  function titleChange(data, type) {
-//      window.clearInterval(bannerTime);
-//      $(".bar-bk").removeClass("selected");
-//      $(".bar-bk").eq(data).addClass("selected");
-//      $("#leftTitle h3").html(playArr[data].title);
-//      state = type;
-//      if (type == "up") {
-//          offsetX = 1 / (picAll + 2) * (data);
-//
-//      } else if (type == "down") {
-//          offsetX = 1 / (picAll + 2) * (data + 2);
-//
-//      }
-//
-//  }
+   	}
 
     function canvasPic() {
         var c = document.getElementById("myCanvas");
@@ -398,8 +373,6 @@ $(document).ready(function ($)
         mouseY = ( event.clientY - windowHalfY ) / 2;
     }
 
-    //
-
     function animate() {
         window.requestAnimationFrame(animate);
         render();
@@ -407,16 +380,81 @@ $(document).ready(function ($)
 
     function render() 
     {	
-        camera.lookAt(new THREE.Vector3());
-        renderer.render(scene, camera);
+		if(updateOffsetFlag)
+    	{	
+    		animationCount+=1;
+    		if(!icon)//left
+    		{	    		
+	    		newScreenTex.offset = new THREE.Vector2(animationCount/100, 0);
+	    		
+    		}else{
+	    		newScreenTex.offset = new THREE.Vector2(0.5-animationCount/100, 0);	    		
+    		}
+			if(animationCount==50)
+    		{
+    			updateOffsetFlag=false;
+    			animationCount=0;
+    		}
+    	}
+
+    	camera.lookAt(new THREE.Vector3());
+	    renderer.render(scene, camera);
+
     }
 
-    /*function animate()
-     {
-     requestAnimationFrame(function(){
-     camera.lookAt(new THREE.Vector3());
-     renderer.render( scene, camera );
-     requestAnimationFrame(arguments.callee);
-     });
-     }*/
+    //create concat big image
+    function getConcatImage(pre,aim) 
+    {
+        var canvas = $("<canvas>");
+        canvas.get(0).width = 1024*2;
+        canvas.get(0).height = 512;
+        var ctx = canvas.get(0).getContext('2d');
+         
+        drawImage(assets.cachedImages[pre],0,0);
+		drawImage(assets.cachedImages[aim],1024,0);
+ 
+
+
+        function drawImage(image,x,y) {
+            ctx.drawImage(image, x,y,1024,512);
+        }
+
+        return canvas.get(0).toDataURL();
+    }
+    
+	function newTexture(pre,aim)
+	{
+		var updateScreenTexture = new THREE.Texture();
+		var loader = new THREE.ImageLoader(manager);
+        loader.load(getConcatImage(pre,aim), function (image) {
+            updateScreenTexture.image = image;
+            updateScreenTexture.needsUpdate = true;
+            if(!icon)
+            {
+            	updateScreenTexture.offset = new THREE.Vector2(0, 0);
+            }else{
+            	updateScreenTexture.offset = new THREE.Vector2(0.5, 0);
+            }
+            
+            updateScreenTexture.repeat.set(0.5, 1);
+
+        });
+        return updateScreenTexture;
+	}
+
+	function updateTexture(pre,aim) 
+	{
+		newScreenTex=newTexture(pre,aim);
+       	updateOffsetFlag=true;
+	    screenObj.traverse( function ( child ) {
+	     	if (child instanceof THREE.Mesh) {
+	          //create a global var to reference later when changing textures
+	          child;
+	          //apply texture
+	          child.material.map = newScreenTex;
+	          //child.material.map = THREE.ImageUtils.loadTexture(textureArray[index]);
+	          child.material.needsUpdate = true;
+	      	}
+	    });
+	}
 });

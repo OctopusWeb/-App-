@@ -31,6 +31,8 @@
 	<script type="text/javascript" src="js/jquery-2.1.1.min.js" ></script>
 	<script type="text/javascript" src="js/jquery.touchSwipe.min.js" ></script>
 	<script type="text/javascript" src="js/three.min.js" ></script>
+	<script type="text/javascript" src="js/Animation.js" ></script>
+	<script type="text/javascript" src="js/AnimationHandler.js" ></script>
 	<script type="text/javascript" src="js/OBJLoader.js" ></script>
 	<script type="text/javascript" src="js/FBXLoader.js" ></script>
 	<script type="text/javascript" src="js/Detector.js" ></script>
@@ -68,8 +70,64 @@
 				};
 				var onError = function( xhr ) {
 				};
+				
+				var loader = new THREE.JSONLoader(),  
+				    animatedMesh;
+				
+				loader.load( 'img/022.js', function ( geometry, materials ) {
+				
+				    // Tell the material that it has bone weights
+				    var originalMaterial = materials[ 0 ];
+				    originalMaterial.skinning = true;
+					
+				    // Create a new SkinnedMesh (important! Not a animatedMesh!)
+				    animatedMesh = new THREE.SkinnedMesh( geometry, originalMaterial );
+				
+				    // Optional scale step, your results may vary
+				    animatedMesh.scale.set( 0.1, 0.1, 0.1 );
+				    
+				
+				    // Instantiate the animation
+				    console.log(geometry)
+				    /*
+				    var animation = new THREE.Animation(
+				        animatedMesh,
+				        geometry.animation
+				    );
+				
+				    // Start playing the animation
+				    animation.play();
+				    */
+				   var mixers = [];
+				   animatedMesh.traverse( function( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							// pass
+						}
+						if ( child instanceof THREE.SkinnedMesh ) {
+							if ( child.geometry.animations !== undefined || child.geometry.morphAnimations !== undefined ) {
+								console.log(child);
+								child.mixer = new THREE.AnimationMixer( child );
+								mixers.push( child.mixer );
+								var action = child.mixer.clipAction( child.geometry.animations[ 0 ] );
+								action.play();
+							}
+						}
+					} );
+					scene.add( animatedMesh );
+				
+				});
+				
+				// ... Your scene code here ...
+				
+				// Add animatedMesh to scene
+				
+				
+				
+				
+				
+				
 				var loader = new THREE.FBXLoader( manager );
-				loader.load( 'img/box(3).FBX', function( object ) {
+				loader.load( 'img/01.FBX', function( object ) {
 					object.traverse( function( child ) {
 						if ( child instanceof THREE.Mesh ) {
 							// pass

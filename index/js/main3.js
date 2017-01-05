@@ -1,5 +1,4 @@
-$(document).ready(function ($) 
-{
+$(document).ready(function ($) {
     var assets = {};
     var num = 0;
     var playNum = 0;
@@ -13,36 +12,36 @@ $(document).ready(function ($)
     var playArr = [];
     var picAll = 0;
     $("#wrap").animate({"right": "0%"});
-    $("#carousel").swipe({
-        swipe: function (event, direction, distance, duration, fingerCount, fingerData) {
-            if (direction == "left") {
-                num++
-                num == 6 ? num = 0 : num = num;
-                rotateto -= tcItemInitialRotation;
-                tcRotate(rotateto);
-            } else if (direction == "right") {
-                num--;
-                num == -1 ? num = 5 : num = num;
-                rotateto += tcItemInitialRotation;
-                tcRotate(rotateto);
-            } else if (!direction) {
-                console.log(videoArr[num]);
-                if (typeof videoHallClick == "undefined") {
-                    console.log("并没有找到videoHallClick方法")
-                } else {
-                    videoHallClick(videoArr[num].auditoriumId, videoArr[num].loadType, videoArr[num].loadUrl);
-                }
-            }
-            window.clearInterval(autoTime);
-            autoTime = setInterval(function () {
-                num++;
-                num == 6 ? num = 0 : num = num;
-                rotateto -= tcItemInitialRotation;
-                tcRotate(rotateto);
-            }, 5000);
-        },
-        threshold: 0
-    });
+    /*$("#carousel").swipe({
+     swipe: function (event, direction, distance, duration, fingerCount, fingerData) {
+     if (direction == "left") {
+     num++
+     num == 6 ? num = 0 : num = num;
+     rotateto -= tcItemInitialRotation;
+     tcRotate(rotateto);
+     } else if (direction == "right") {
+     num--;
+     num == -1 ? num = 5 : num = num;
+     rotateto += tcItemInitialRotation;
+     tcRotate(rotateto);
+     } else if (!direction) {
+     console.log(videoArr[num]);
+     if (typeof videoHallClick == "undefined") {
+     console.log("并没有找到videoHallClick方法")
+     } else {
+     videoHallClick(videoArr[num].auditoriumId, videoArr[num].loadType, videoArr[num].loadUrl);
+     }
+     }
+     window.clearInterval(autoTime);
+     autoTime = setInterval(function () {
+     num++;
+     num == 6 ? num = 0 : num = num;
+     rotateto -= tcItemInitialRotation;
+     tcRotate(rotateto);
+     }, 5000);
+     },
+     threshold: 0
+     });*/
     $("#leftEvent").swipe({
         swipe: function (event, direction, distance, duration, fingerCount, fingerData) {
             if (direction == "left") {
@@ -152,11 +151,15 @@ $(document).ready(function ($)
     var mouseX = 0, mouseY = 0;
     var windowHalfX = 500;
     var windowHalfY = 350;
-    $.getJSON("http://120.92.4.46:8080/from/headPageApi/headPage.do", function (json) {
+    var url = "http://120.92.4.46:8080/from/headPageApi/headPage.do";
+    url = "./data/headPage.do.json";
+    $.getJSON(url, function (json) {
         videoImage(json, function () {
             $("#leftTitle h3").html(playArr[0].title);
         })
+
         cacheImages(json, function () {
+
             init1();
             animate();
         });
@@ -175,8 +178,8 @@ $(document).ready(function ($)
 
     //cache images
     function cacheImages(json, onComplete) {
+
         picAll = json.data.playBillList.length;
-        picAll=6;
         var index = "";
         for (var i = 0; i < picAll; i++) {
             index += '<div class="bar-bk"></div>';
@@ -192,18 +195,30 @@ $(document).ready(function ($)
         cacheImage(0);
 
         function cacheImage(idx) {
-            if (idx == urls.length)return allComplete();
-            var img = new Image();
-            img.crossOrigin = "anynonus";
-            img.onload = function () {
-                cachedImages.push(img);
-                cacheImage(idx + 1);
+            try {
+
+                if (idx == urls.length)return allComplete();
+                var img = new Image();
+                img.crossOrigin = "anynonus";
+
+                img.onload = function () {
+                    cachedImages.push(img);
+                    // alert( urls[idx]);
+                    cacheImage(idx + 1);
+                }
+
+                img.src = urls[idx];
+
             }
-            img.src = urls[idx];
+            catch (e) {
+                alert(e.message)
+            }
+
             //img.src = "https://yweb0.cnliveimg.com/img/CMCC_MOVIE/622079536_336_220.jpg";
         }
 
         function allComplete() {
+
             assets.cachedImages = cachedImages;
             onComplete();
         }
@@ -213,11 +228,9 @@ $(document).ready(function ($)
     function getConcatImage() {
         var canvas = $("<canvas>");
         var drawArr = assets.cachedImages.concat();
-        drawArr.length=6;
         drawArr.push(assets.cachedImages[0]);
         drawArr.unshift(assets.cachedImages[assets.cachedImages.length - 1]);
         var len = drawArr.length;
-//      len=6;
         canvas.get(0).width = 1024 * len;
         canvas.get(0).height = 512;
         var ctx = canvas.get(0).getContext('2d');
@@ -235,6 +248,7 @@ $(document).ready(function ($)
 
 
     function init1() {
+
         container = document.createElement('div');
         document.getElementById("leftBk").appendChild(container);
         camera = new THREE.PerspectiveCamera(45, 1800 / 1700, 1, 12000);
@@ -261,6 +275,7 @@ $(document).ready(function ($)
         };
         var loader = new THREE.ImageLoader(manager);
         loader.load(getConcatImage(), function (image) {
+
             texture.image = image;
             texture.needsUpdate = true;
             texture.offset = new THREE.Vector2(1 / (picAll + 2), 0);
@@ -273,7 +288,9 @@ $(document).ready(function ($)
         var loader = new THREE.OBJLoader(manager);
         loader.load('img/DaPingDi.obj', function (object) {
             object.traverse(function (child) {
+                console.log(child)
                 if (child instanceof THREE.Mesh) {
+                    console.log(child.material)
                     child.material.map = texture1;
                 }
             });
@@ -284,13 +301,14 @@ $(document).ready(function ($)
 
 
         var loader = new THREE.ImageLoader(manager);
-        loader.load('img/wallBk.jpg', function (image) {
+        loader.load('img/wallBk2.jpg', function (image) {
             texture1.image = image;
             texture1.needsUpdate = true;
         });
         //model
         var loader = new THREE.OBJLoader(manager);
         loader.load('img/Daping.obj', function (object) {
+
             object.traverse(function (child) {
                 if (child instanceof THREE.Mesh) {
                     child.material.map = texture;
@@ -330,52 +348,6 @@ $(document).ready(function ($)
         //
     }
 
-    function titleChange(data, type) {
-        window.clearInterval(bannerTime);
-        $(".bar-bk").removeClass("selected");
-        $(".bar-bk").eq(data).addClass("selected");
-        $("#leftTitle h3").html(playArr[data].title);
-
-		console.log("data"+data);
-        if (type == "up") {
-            offsetX = 1 / (picAll + 2) * (data);
-            bannerTime = setInterval(function () {
-                offsetX += 0.005;
-                if (offsetX >= 1 / (picAll + 2) * (data + 1)) {
-                    window.clearInterval(bannerTime);
-                }
-                texture.offset = new THREE.Vector2(offsetX, 0);
-            }, 5)
-        } else if (type == "down") {
-            offsetX = 1 / (picAll + 2) * (data + 2);
-            bannerTime = setInterval(function () {
-                offsetX -= 0.005;
-                if (offsetX <= 1 / (picAll + 2) * (data + 1)) {
-                    window.clearInterval(bannerTime);
-                }
-                texture.offset = new THREE.Vector2(offsetX, 0);
-            }, 5)
-        }
-
-    }
-
-// 	var state = "";
-//
-//  function titleChange(data, type) {
-//      window.clearInterval(bannerTime);
-//      $(".bar-bk").removeClass("selected");
-//      $(".bar-bk").eq(data).addClass("selected");
-//      $("#leftTitle h3").html(playArr[data].title);
-//      state = type;
-//      if (type == "up") {
-//          offsetX = 1 / (picAll + 2) * (data);
-//
-//      } else if (type == "down") {
-//          offsetX = 1 / (picAll + 2) * (data + 2);
-//
-//      }
-//
-//  }
 
     function canvasPic() {
         var c = document.getElementById("myCanvas");
@@ -400,23 +372,45 @@ $(document).ready(function ($)
 
     //
 
+    var state = "";
+
+    function titleChange(data, type) {
+        window.clearInterval(bannerTime);
+        $(".bar-bk").removeClass("selected");
+        $(".bar-bk").eq(data).addClass("selected");
+        $("#leftTitle h3").html(playArr[data].title);
+        state = type;
+        if (type == "up") {
+            offsetX = 1 / (picAll + 2) * (data);
+
+        } else if (type == "down") {
+            offsetX = 1 / (picAll + 2) * (data + 2);
+
+        }
+
+    }
+
+
     function animate() {
         window.requestAnimationFrame(animate);
         render();
     }
 
-    function render() 
-    {	
+    function render() {
+
+        if (state == "down") {
+            offsetX -= 0.01;
+        }
+       else  if (state == "up") {
+            offsetX += 0.01;
+        }
+
+
+
+        texture.offset = new THREE.Vector2(offsetX, 0);
         camera.lookAt(new THREE.Vector3());
         renderer.render(scene, camera);
     }
 
-    /*function animate()
-     {
-     requestAnimationFrame(function(){
-     camera.lookAt(new THREE.Vector3());
-     renderer.render( scene, camera );
-     requestAnimationFrame(arguments.callee);
-     });
-     }*/
+
 });
